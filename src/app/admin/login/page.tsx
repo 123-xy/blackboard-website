@@ -59,7 +59,7 @@ export default async function AdminLoginPage({
         <form action={loginAction}>
           <div className="mb-5">
             <label className="mb-2 block text-[13px] font-semibold text-heading">Email</label>
-            <input name="email" type="email" required placeholder="admin@blackboard.cafe" className={fieldClasses} />
+            <input name="email" type="email" required placeholder="admin@blackboardrestaurant.com" className={fieldClasses} />
           </div>
           <div className="mb-7">
             <label className="mb-2 block text-[13px] font-semibold text-heading">Password</label>

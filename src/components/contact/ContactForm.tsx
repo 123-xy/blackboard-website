@@ -90,6 +90,7 @@ export default function ContactForm() {
         email: String(formData.get("email") || ""),
         cateringType: String(formData.get("cateringType") || ""),
         guestCount: String(formData.get("guestCount") || ""),
+        eventDate: String(formData.get("eventDate") || ""),
         message: String(formData.get("message") || ""),
         website: "",
         recaptchaToken,
@@ -167,6 +168,15 @@ export default function ContactForm() {
               className={fieldClasses}
             />
           </div>
+          <div className="mb-5">
+            <label className="mb-2 block text-[13px] font-semibold text-heading">Event Date</label>
+            <input
+              name="eventDate"
+              type="date"
+              min={new Date().toISOString().split("T")[0]}
+              className={fieldClasses}
+            />
+          </div>
           <div className="mb-7">
             <label className="mb-2 block text-[13px] font-semibold text-heading">Message</label>
             <textarea
@@ -181,7 +191,7 @@ export default function ContactForm() {
 
           {status === "error" && (
             <div className="mb-5 text-[13px] text-error">
-              {errorMessage || "Something went wrong sending your message — please try again, or email venuacha@whiteboard.cafe directly."}
+              {errorMessage || "Something went wrong sending your message — please try again, or email Venuacha@whiteboard.com directly."}
             </div>
           )}
 

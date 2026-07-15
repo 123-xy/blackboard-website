@@ -33,14 +33,14 @@ export default function BookATablePage() {
           alt=""
           width={130}
           height={130}
-          className="pointer-events-none absolute top-[12%] left-[6%] z-0 w-[130px] opacity-10 [animation:badgeFloatSm_9s_ease-in-out_infinite]"
+          className="pointer-events-none absolute top-[12%] left-[6%] z-0 w-[130px] h-[130px] opacity-10 [animation:badgeFloatSm_9s_ease-in-out_infinite]"
         />
         <Image
           src="/images/logo-badge.png"
           alt=""
           width={150}
           height={150}
-          className="pointer-events-none absolute bottom-[14%] right-[7%] z-0 w-[150px] opacity-[0.12] [animation:badgeFloatSm2_11s_ease-in-out_infinite]"
+          className="pointer-events-none absolute bottom-[14%] right-[7%] z-0 w-[150px] h-[150px] opacity-[0.12] [animation:badgeFloatSm2_11s_ease-in-out_infinite]"
         />
         <CoffeeCupSteam className="absolute top-[10%] right-[20%] z-0 opacity-50" />
 

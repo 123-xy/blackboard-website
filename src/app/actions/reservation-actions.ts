@@ -4,6 +4,8 @@ import { createReservation, cancelReservationByCode, getReservationByCode, autoC
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { reservationSchema, confirmationCodeSchema } from "@/lib/validations";
+import { sendReservationEmail, sendReservationConfirmedNoticeEmail } from "@/lib/services/email";
+import { sendReservationConfirmedNoticeWhatsApp } from "@/lib/services/whatsapp";
 import type { Prisma } from "@prisma/client";
 
 // ---------- Admin: list reservations ----------
@@ -146,6 +148,23 @@ export async function getReservationByCodeAction(code: string) {
   }
 }
 
+// Notify the customer their table is confirmed — best-effort, never throws.
+async function notifyReservationConfirmed(reservation: {
+  customerName: string;
+  email: string;
+  phone: string;
+  guests: number;
+  reservationDate: Date;
+  reservationTime: string;
+  confirmationCode: string;
+}) {
+  const [emailResult, whatsappResult] = await Promise.all([
+    sendReservationConfirmedNoticeEmail(reservation),
+    sendReservationConfirmedNoticeWhatsApp(reservation),
+  ]);
+  return { email: emailResult.ok, whatsapp: whatsappResult.ok };
+}
+
 // ---------- Admin: update status ----------
 export async function updateReservationStatusAction(id: string, status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED") {
   const session = await auth();
@@ -153,18 +172,98 @@ export async function updateReservationStatusAction(id: string, status: "PENDING
     return { ok: false as const, error: "Unauthorized" };
   }
 
+  let reservation;
   try {
-    await prisma.reservation.update({
+    reservation = await prisma.reservation.update({
       where: { id },
       data: { status },
     });
-    return { ok: true as const };
   } catch (err) {
     return {
       ok: false as const,
       error: err instanceof Error ? err.message : "Failed to update reservation",
     };
   }
+
+  const notified = status === "CONFIRMED" ? await notifyReservationConfirmed(reservation) : null;
+
+  return { ok: true as const, notified };
+}
+
+// ---------- Admin: bulk update status ----------
+export async function bulkUpdateReservationStatusAction(
+  ids: string[],
+  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED"
+) {
+  const session = await auth();
+  if (!session) {
+    return { ok: false as const, error: "Unauthorized" };
+  }
+
+  if (ids.length === 0) {
+    return { ok: false as const, error: "No reservations selected" };
+  }
+
+  await prisma.reservation.updateMany({
+    where: { id: { in: ids } },
+    data: { status },
+  });
+
+  if (status !== "CONFIRMED") {
+    return { ok: true as const, notifiedCount: 0, failedCount: 0 };
+  }
+
+  const reservations = await prisma.reservation.findMany({ where: { id: { in: ids } } });
+  const results = await Promise.all(reservations.map((r) => notifyReservationConfirmed(r)));
+  const notifiedCount = results.filter((r) => r.email || r.whatsapp).length;
+
+  return { ok: true as const, notifiedCount, failedCount: results.length - notifiedCount };
+}
+
+// ---------- Admin: bulk delete ----------
+export async function bulkDeleteReservationsAction(ids: string[]) {
+  const session = await auth();
+  if (!session) {
+    return { ok: false as const, error: "Unauthorized" };
+  }
+  if (session.user?.role !== "ADMIN") {
+    return { ok: false as const, error: "Only admins can delete reservations" };
+  }
+
+  if (ids.length === 0) {
+    return { ok: false as const, error: "No reservations selected" };
+  }
+
+  const result = await prisma.reservation.deleteMany({ where: { id: { in: ids } } });
+  return { ok: true as const, deletedCount: result.count };
+}
+
+// ---------- Admin: resend confirmation email ----------
+export async function resendReservationConfirmationAction(id: string) {
+  const session = await auth();
+  if (!session) {
+    return { ok: false as const, error: "Unauthorized" };
+  }
+
+  const reservation = await prisma.reservation.findUnique({ where: { id } });
+  if (!reservation) {
+    return { ok: false as const, error: "Reservation not found" };
+  }
+
+  const result = await sendReservationEmail({
+    customerName: reservation.customerName,
+    email: reservation.email,
+    guests: reservation.guests,
+    reservationDate: reservation.reservationDate,
+    reservationTime: reservation.reservationTime,
+    confirmationCode: reservation.confirmationCode,
+  });
+
+  if (!result?.ok) {
+    return { ok: false as const, error: result?.error || "Failed to resend confirmation email" };
+  }
+
+  return { ok: true as const };
 }
 
 // ---------- Admin: delete reservation ----------
@@ -172,6 +271,9 @@ export async function deleteReservationAction(id: string) {
   const session = await auth();
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
+  }
+  if (session.user?.role !== "ADMIN") {
+    return { ok: false as const, error: "Only admins can delete reservations" };
   }
 
   try {

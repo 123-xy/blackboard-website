@@ -6,10 +6,18 @@ import ReservationTable, { type ReservationRow } from "@/components/booking/Rese
 import AvailabilityCalendar from "@/components/booking/AvailabilityCalendar";
 import InquiryTable, { type InquiryRow } from "@/components/contact/InquiryTable";
 import InquiryDetail from "@/components/contact/InquiryDetail";
+import RestaurantSettingsPanel from "@/components/booking/RestaurantSettingsPanel";
+import NewsletterSubscribersPanel from "@/components/NewsletterSubscribersPanel";
+import DashboardOverview from "@/components/dashboard/DashboardOverview";
+import CustomerInsightsPanel from "@/components/dashboard/CustomerInsightsPanel";
+import ReservationOpsPanel from "@/components/dashboard/ReservationOpsPanel";
+import GlobalSearch from "@/components/dashboard/GlobalSearch";
+import NotificationBell from "@/components/dashboard/NotificationBell";
+import AdminUsersPanel from "@/components/AdminUsersPanel";
 import { getAllReservationsAction, getDashboardStatsAction } from "@/app/actions/reservation-actions";
 import { getAllInquiries, getInquiryStatsAction } from "@/app/actions/contact-actions";
 
-type Tab = "reservations" | "inquiries";
+type Tab = "reservations" | "inquiries" | "newsletter" | "analytics" | "settings" | "team";
 
 type ReservationStats = {
   todayCount: number;
@@ -30,8 +38,9 @@ type InquiryStats = {
 
 const emptyPagination = { page: 1, limit: 20, total: 0, totalPages: 0 };
 
-export default function AdminDashboardClient() {
+export default function AdminDashboardClient({ role, userId }: { role?: "ADMIN" | "STAFF"; userId?: string }) {
   const [tab, setTab] = useState<Tab>("reservations");
+  const isAdmin = role === "ADMIN";
 
   // Reservations state
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
@@ -143,6 +152,23 @@ export default function AdminDashboardClient() {
 
   return (
     <div className="mx-auto max-w-[1300px] px-5 py-8 sm:px-8">
+      {/* Toolbar: global search + notifications */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <GlobalSearch
+          onSelectReservation={(search) => {
+            setTab("reservations");
+            setReservationSearch(search);
+            setReservationPage(1);
+          }}
+          onSelectInquiry={(search) => {
+            setTab("inquiries");
+            setInquirySearch(search);
+            setInquiryPage(1);
+          }}
+        />
+        <NotificationBell />
+      </div>
+
       {/* Tabs */}
       <div className="mb-7 flex gap-2 border-b border-card-border">
         <button
@@ -161,10 +187,48 @@ export default function AdminDashboardClient() {
         >
           CONTACT INQUIRIES
         </button>
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => setTab("newsletter")}
+              className={`border-b-2 px-4 py-3 text-sm font-bold tracking-[0.5px] transition-colors ${
+                tab === "newsletter" ? "border-gold text-gold-text" : "border-transparent text-muted hover:text-heading"
+              }`}
+            >
+              NEWSLETTER
+            </button>
+            <button
+              onClick={() => setTab("analytics")}
+              className={`border-b-2 px-4 py-3 text-sm font-bold tracking-[0.5px] transition-colors ${
+                tab === "analytics" ? "border-gold text-gold-text" : "border-transparent text-muted hover:text-heading"
+              }`}
+            >
+              OVERVIEW
+            </button>
+            <button
+              onClick={() => setTab("team")}
+              className={`border-b-2 px-4 py-3 text-sm font-bold tracking-[0.5px] transition-colors ${
+                tab === "team" ? "border-gold text-gold-text" : "border-transparent text-muted hover:text-heading"
+              }`}
+            >
+              TEAM
+            </button>
+            <button
+              onClick={() => setTab("settings")}
+              className={`border-b-2 px-4 py-3 text-sm font-bold tracking-[0.5px] transition-colors ${
+                tab === "settings" ? "border-gold text-gold-text" : "border-transparent text-muted hover:text-heading"
+              }`}
+            >
+              SETTINGS
+            </button>
+          </>
+        )}
       </div>
 
       {tab === "reservations" && (
         <div>
+          <ReservationOpsPanel />
+
           {reservationStats && (
             <div className="mb-6">
               <DashboardStats stats={reservationStats} />
@@ -202,6 +266,16 @@ export default function AdminDashboardClient() {
             >
               {showCalendar ? "Hide Calendar" : "Calendar View"}
             </button>
+            <a
+              href={`/api/reservations/export?${new URLSearchParams({
+                ...(reservationSearch ? { search: reservationSearch } : {}),
+                ...(reservationStatus ? { status: reservationStatus } : {}),
+                ...(reservationDate ? { date: reservationDate } : {}),
+              }).toString()}`}
+              className="rounded-lg border border-card-border px-3.5 py-2.5 text-sm font-semibold text-muted no-underline transition-colors hover:border-gold hover:text-gold"
+            >
+              Export CSV
+            </a>
           </div>
 
           {showCalendar && (
@@ -217,6 +291,7 @@ export default function AdminDashboardClient() {
             pagination={reservationPagination}
             onChange={(page) => setReservationPage(page)}
             onRefresh={refreshReservations}
+            canDelete={isAdmin}
           />
         </div>
       )}
@@ -261,6 +336,15 @@ export default function AdminDashboardClient() {
               <option value="IN_PROGRESS">In Progress</option>
               <option value="RESOLVED">Resolved</option>
             </select>
+            <a
+              href={`/api/contact/export?${new URLSearchParams({
+                ...(inquirySearch ? { search: inquirySearch } : {}),
+                ...(inquiryStatus ? { status: inquiryStatus } : {}),
+              }).toString()}`}
+              className="rounded-lg border border-card-border px-3.5 py-2.5 text-sm font-semibold text-muted no-underline transition-colors hover:border-gold hover:text-gold"
+            >
+              Export CSV
+            </a>
           </div>
 
           <InquiryTable
@@ -269,9 +353,23 @@ export default function AdminDashboardClient() {
             onChange={(page) => setInquiryPage(page)}
             onRefresh={refreshInquiries}
             onView={(inquiry) => setViewingInquiry(inquiry)}
+            canDelete={isAdmin}
           />
         </div>
       )}
+
+      {isAdmin && tab === "newsletter" && <NewsletterSubscribersPanel />}
+
+      {isAdmin && tab === "analytics" && (
+        <div>
+          <DashboardOverview />
+          <CustomerInsightsPanel />
+        </div>
+      )}
+
+      {isAdmin && tab === "team" && <AdminUsersPanel currentUserId={userId} />}
+
+      {isAdmin && tab === "settings" && <RestaurantSettingsPanel />}
 
       {viewingInquiry && (
         <InquiryDetail

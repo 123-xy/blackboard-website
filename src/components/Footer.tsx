@@ -1,4 +1,5 @@
 import Link from "next/link";
+import NewsletterSignupForm from "./NewsletterSignupForm";
 
 export default function Footer() {
   return (
@@ -58,8 +59,8 @@ export default function Footer() {
             <a href="tel:9949670225" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
               +91 99496-70225
             </a>
-            <a href="mailto:venuacha@whiteboard.cafe" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
-              venuacha@whiteboard.cafe
+            <a href="mailto:Venuacha@whiteboard.com" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
+              Venuacha@whiteboard.com
             </a>
           </div>
           <div className="mt-5 flex gap-3">
@@ -95,6 +96,14 @@ export default function Footer() {
               </svg>
             </a>
           </div>
+        </div>
+
+        <div>
+          <div className="mb-4.5 font-display text-base font-bold text-gold">STAY UPDATED</div>
+          <p className="m-0 mb-3.5 max-w-[260px] text-sm leading-[1.7] text-muted-on-dark">
+            Get news on new menu items, offers, and events.
+          </p>
+          <NewsletterSignupForm />
         </div>
       </div>
 

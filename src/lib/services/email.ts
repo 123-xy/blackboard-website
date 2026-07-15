@@ -1,6 +1,6 @@
-import { formatDate, formatTime } from "@/lib/utils";
+import { formatDate, formatTime, describeRelativeDate } from "@/lib/utils";
 
-const LOGO_URL = "https://blackboard.cafe/images/logo-badge.png";
+const LOGO_URL = "https://blackboardrestaurant.com/images/logo-badge.png";
 const GOOGLE_MAPS_URL = "https://maps.google.com/?q=Blackboard+Cafe+Hyderabad+Telangana+India";
 
 export async function sendReservationEmail(reservation: {
@@ -14,10 +14,10 @@ export async function sendReservationEmail(reservation: {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.error("[email] RESEND_API_KEY not configured");
-    return;
+    return { ok: false as const, error: "RESEND_API_KEY not configured" };
   }
 
-  const cancelUrl = `${process.env.NEXTAUTH_URL || "https://blackboard.cafe"}/reservations/cancel?code=${reservation.confirmationCode}`;
+  const cancelUrl = `${process.env.NEXTAUTH_URL || "https://blackboardrestaurant.com"}/reservations/cancel?code=${reservation.confirmationCode}`;
   const dateStr = formatDate(reservation.reservationDate);
   const timeStr = formatTime(reservation.reservationTime);
 
@@ -136,7 +136,7 @@ export async function sendReservationEmail(reservation: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.CONTACT_FROM_EMAIL || "Blackboard Cafe <onboarding@resend.dev>",
+        from: process.env.CONTACT_FROM_EMAIL || "Blackboard Cafe <noreply@blackboardrestaurant.com>",
         to: [reservation.email],
         subject: `Reservation Confirmed — ${reservation.confirmationCode} | Blackboard Cafe`,
         html,
@@ -146,8 +146,144 @@ export async function sendReservationEmail(reservation: {
     if (!res.ok) {
       const detail = await res.text();
       console.error("[email] Resend error", res.status, detail);
+      return { ok: false as const, error: `Resend API error (${res.status}): ${detail}` };
     }
+    return { ok: true as const };
   } catch (err) {
     console.error("[email] Failed to send", err);
+    return { ok: false as const, error: err instanceof Error ? err.message : "Failed to send email" };
+  }
+}
+
+// Sent when staff confirm a reservation from the admin dashboard — a warmer,
+// "you're all set, come in" notice distinct from the initial booking receipt above.
+export async function sendReservationConfirmedNoticeEmail(reservation: {
+  customerName: string;
+  email: string;
+  guests: number;
+  reservationDate: Date | string;
+  reservationTime: string;
+  confirmationCode: string;
+}) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error("[email] RESEND_API_KEY not configured");
+    return { ok: false as const, error: "RESEND_API_KEY not configured" };
+  }
+
+  const relativeDay = describeRelativeDate(reservation.reservationDate);
+  const dateStr = formatDate(reservation.reservationDate);
+  const timeStr = formatTime(reservation.reservationTime);
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:0;background:#14120F;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#14120F;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#1C1A17;border-radius:20px 20px 0 0;padding:40px 40px 24px;text-align:center;">
+              <img src="${LOGO_URL}" alt="Blackboard Cafe" width="80" height="80" style="display:block;margin:0 auto 16px;" />
+              <h1 style="margin:0;font-size:24px;font-weight:800;color:#F2A93B;letter-spacing:1px;">
+                YOU'RE ALL SET
+              </h1>
+              <p style="margin:8px 0 0;font-size:15px;color:#EFE9E0;line-height:1.6;">
+                Hi ${reservation.customerName}, your table is confirmed for <strong style="color:#F2A93B;">${relativeDay}</strong> — we look forward to having you at Blackboard Cafe.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Gold divider -->
+          <tr>
+            <td style="background:#1C1A17;padding:0 40px;">
+              <div style="height:3px;background:linear-gradient(90deg,transparent,#F2A93B,transparent);border-radius:2px;"></div>
+            </td>
+          </tr>
+
+          <!-- Details -->
+          <tr>
+            <td style="background:#1C1A17;padding:28px 40px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:12px 0;border-bottom:1px solid #35322C;">
+                    <span style="font-size:12px;font-weight:700;color:#B8B2A8;letter-spacing:1px;text-transform:uppercase;">Date</span><br/>
+                    <span style="font-size:18px;font-weight:600;color:#FFFFFF;margin-top:4px;display:inline-block;">📅 ${dateStr}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 0;border-bottom:1px solid #35322C;">
+                    <span style="font-size:12px;font-weight:700;color:#B8B2A8;letter-spacing:1px;text-transform:uppercase;">Time</span><br/>
+                    <span style="font-size:18px;font-weight:600;color:#FFFFFF;margin-top:4px;display:inline-block;">🕐 ${timeStr}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 0;">
+                    <span style="font-size:12px;font-weight:700;color:#B8B2A8;letter-spacing:1px;text-transform:uppercase;">Guests</span><br/>
+                    <span style="font-size:18px;font-weight:600;color:#FFFFFF;margin-top:4px;display:inline-block;">👥 ${reservation.guests} ${reservation.guests === 1 ? "Guest" : "Guests"}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Button -->
+          <tr>
+            <td style="background:#1C1A17;padding:8px 40px 36px;text-align:center;">
+              <a href="${GOOGLE_MAPS_URL}" target="_blank" style="display:inline-block;background:#F2A93B;color:#1C1A17;font-size:14px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;letter-spacing:0.5px;">
+                📍 VIEW ON GOOGLE MAPS
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#242220;border-radius:0 0 20px 20px;padding:24px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#8A8478;">
+                Confirmation code: ${reservation.confirmationCode}<br/>
+                Blackboard Cafe · Hyderabad, Telangana, India<br/>
+                Great Food, Great Life
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.CONTACT_FROM_EMAIL || "Blackboard Cafe <noreply@blackboardrestaurant.com>",
+        to: [reservation.email],
+        subject: `Your table is confirmed for ${relativeDay} — Blackboard Cafe`,
+        html,
+      }),
+    });
+
+    if (!res.ok) {
+      const detail = await res.text();
+      console.error("[email] Resend error", res.status, detail);
+      return { ok: false as const, error: `Resend API error (${res.status}): ${detail}` };
+    }
+    return { ok: true as const };
+  } catch (err) {
+    console.error("[email] Failed to send", err);
+    return { ok: false as const, error: err instanceof Error ? err.message : "Failed to send email" };
   }
 }

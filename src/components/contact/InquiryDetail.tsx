@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, parseInquiryDetails } from "@/lib/utils";
 import { updateInquiryStatus, deleteInquiry } from "@/app/actions/contact-actions";
 import type { InquiryRow } from "./InquiryTable";
 
@@ -15,13 +15,31 @@ export default function InquiryDetail({
   onRefresh: () => void;
 }) {
   const [busy, setBusy] = useState(false);
+  const [resolveFeedback, setResolveFeedback] = useState<{ message: string; error?: boolean } | null>(null);
+
+  const { eventDate, guestCount, message: cleanMessage } = parseInquiryDetails(inquiry.message);
 
   const handleResolve = async () => {
     setBusy(true);
-    await updateInquiryStatus(inquiry.id, "RESOLVED");
+    setResolveFeedback(null);
+    const result = await updateInquiryStatus(inquiry.id, "RESOLVED");
     setBusy(false);
     onRefresh();
-    onClose();
+
+    if (result.ok && result.notified) {
+      const { email, whatsapp } = result.notified;
+      const message =
+        email && whatsapp
+          ? "Resolved — email & WhatsApp sent to customer"
+          : email
+            ? "Resolved — email sent, WhatsApp not sent"
+            : whatsapp
+              ? "Resolved — WhatsApp sent, email not sent"
+              : "Resolved — notifications failed to send";
+      setResolveFeedback({ message, error: !email && !whatsapp });
+    } else {
+      onClose();
+    }
   };
 
   const handleDelete = async () => {
@@ -60,6 +78,16 @@ export default function InquiryDetail({
           </div>
         )}
 
+        {resolveFeedback && (
+          <div
+            className={`mb-5 rounded-xl border px-4 py-3 text-sm ${
+              resolveFeedback.error ? "border-error/30 bg-error/10 text-error" : "border-gold/30 bg-gold/10 text-gold-text"
+            }`}
+          >
+            {resolveFeedback.message}
+          </div>
+        )}
+
         <div className="mb-5 space-y-3">
           <div className="rounded-xl border border-card-border bg-cream-input px-5 py-3.5">
             <div className="text-xs text-muted">Name</div>
@@ -75,9 +103,21 @@ export default function InquiryDetail({
               <div className="text-sm font-semibold text-heading">{inquiry.phone}</div>
             </div>
           )}
+          {eventDate && (
+            <div className="rounded-xl border border-card-border bg-cream-input px-5 py-3.5">
+              <div className="text-xs text-muted">Event Date</div>
+              <div className="text-sm font-semibold text-heading">{eventDate}</div>
+            </div>
+          )}
+          {guestCount && (
+            <div className="rounded-xl border border-card-border bg-cream-input px-5 py-3.5">
+              <div className="text-xs text-muted">Estimated Guest Count</div>
+              <div className="text-sm font-semibold text-heading">{guestCount}</div>
+            </div>
+          )}
           <div className="rounded-xl border border-card-border bg-cream-input px-5 py-3.5">
             <div className="mb-1 text-xs text-muted">Message</div>
-            <div className="text-sm leading-[1.7] whitespace-pre-wrap text-heading">{inquiry.message}</div>
+            <div className="text-sm leading-[1.7] whitespace-pre-wrap break-words text-heading">{cleanMessage}</div>
           </div>
           <div className="rounded-xl border border-card-border bg-cream-input px-5 py-3.5">
             <div className="text-xs text-muted">Spam Score</div>
@@ -94,11 +134,11 @@ export default function InquiryDetail({
         <div className="flex flex-wrap gap-3">
           <a
             href={`mailto:${inquiry.email}?subject=${encodeURIComponent("Re: " + inquiry.subject)}`}
-            className="flex-1 rounded-lg bg-gold px-6 py-3 text-center text-sm font-bold tracking-[0.5px] text-dark no-underline shadow-[0_4px_0_#C97F16] transition-colors hover:bg-gold-hover-2"
+            className="flex-1 rounded-lg bg-gold px-6 py-3 text-center text-sm font-bold tracking-[0.5px] text-dark shadow-[0_4px_0_#C97F16] transition-colors hover:bg-gold-hover-2 no-underline"
           >
-            Reply
+            Reply via Email App
           </a>
-          {inquiry.status !== "RESOLVED" && (
+          {inquiry.status !== "RESOLVED" && !resolveFeedback && (
             <button
               disabled={busy}
               onClick={handleResolve}

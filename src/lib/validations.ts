@@ -131,3 +131,36 @@ export const updateInquirySchema = z.object({
 });
 
 export type UpdateInquiryInput = z.infer<typeof updateInquirySchema>;
+
+// ---------- Restaurant settings ----------
+export const restaurantSettingsSchema = z
+  .object({
+    openingTime: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format (use HH:mm)"),
+    closingTime: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format (use HH:mm)"),
+    tablesAvailable: z.number().int().min(1, "Must have at least 1 table").max(500, "That's a lot of tables"),
+    slotDuration: z.number().int().min(15, "Minimum 15 minutes").max(240, "Maximum 240 minutes"),
+    maxGuestsPerBooking: z.number().int().min(1, "At least 1 guest").max(100, "Maximum 100 guests"),
+  })
+  .refine((val) => val.openingTime < val.closingTime, {
+    message: "Opening time must be before closing time",
+    path: ["closingTime"],
+  });
+
+export type RestaurantSettingsInput = z.infer<typeof restaurantSettingsSchema>;
+
+// ---------- Newsletter signup ----------
+export const newsletterSchema = z.object({
+  email: z.string().email("Please enter a valid email address").max(255).trim().toLowerCase(),
+});
+
+export type NewsletterInput = z.infer<typeof newsletterSchema>;
+
+// ---------- Admin user management ----------
+export const createAdminUserSchema = z.object({
+  email: z.string().email("Please enter a valid email address").max(255).trim().toLowerCase(),
+  password: z.string().min(8, "Password must be at least 8 characters").max(72),
+  name: z.string().max(100).trim().optional().or(z.literal("")),
+  role: z.enum(["ADMIN", "STAFF"], { error: "Role must be ADMIN or STAFF" }),
+});
+
+export type CreateAdminUserInput = z.infer<typeof createAdminUserSchema>;

@@ -8,7 +8,12 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { formatDateShort } from "@/lib/utils";
-import { updateInquiryStatus, deleteInquiry } from "@/app/actions/contact-actions";
+import {
+  updateInquiryStatus,
+  deleteInquiry,
+  bulkUpdateInquiryStatusAction,
+  bulkDeleteInquiriesAction,
+} from "@/app/actions/contact-actions";
 
 export type InquiryRow = {
   id: string;
@@ -40,14 +45,64 @@ export default function InquiryTable({
   onChange,
   onRefresh,
   onView,
+  canDelete = true,
 }: {
   rows: InquiryRow[];
   pagination: Pagination;
   onChange: (page: number) => void;
   onRefresh: () => void;
   onView: (inquiry: InquiryRow) => void;
+  canDelete?: boolean;
 }) {
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkFeedback, setBulkFeedback] = useState<string | null>(null);
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelected((prev) => (prev.size === rows.length ? new Set() : new Set(rows.map((r) => r.id))));
+  }, [rows]);
+
+  const handleBulkStatus = useCallback(
+    async (status: "NEW" | "IN_PROGRESS" | "RESOLVED") => {
+      setBulkBusy(true);
+      setBulkFeedback(null);
+      const result = await bulkUpdateInquiryStatusAction(Array.from(selected), status);
+      setBulkBusy(false);
+      setSelected(new Set());
+      onRefresh();
+      if (result.ok) {
+        setBulkFeedback(
+          status === "RESOLVED"
+            ? `Updated. Notified ${result.notifiedCount}/${result.notifiedCount + result.failedCount} customers.`
+            : "Status updated."
+        );
+      } else {
+        setBulkFeedback(result.error || "Bulk update failed");
+      }
+    },
+    [selected, onRefresh]
+  );
+
+  const handleBulkDelete = useCallback(async () => {
+    if (!confirm(`Delete ${selected.size} inquiries? This cannot be undone.`)) return;
+    setBulkBusy(true);
+    setBulkFeedback(null);
+    const result = await bulkDeleteInquiriesAction(Array.from(selected));
+    setBulkBusy(false);
+    setSelected(new Set());
+    onRefresh();
+    setBulkFeedback(result.ok ? `Deleted ${result.deletedCount} inquiries.` : result.error || "Bulk delete failed");
+  }, [selected, onRefresh]);
 
   const handleStatusChange = useCallback(
     async (id: string, status: "NEW" | "IN_PROGRESS" | "RESOLVED") => {
@@ -72,6 +127,25 @@ export default function InquiryTable({
 
   const columns = useMemo(
     () => [
+      columnHelper.display({
+        id: "select",
+        header: () => (
+          <input
+            type="checkbox"
+            checked={rows.length > 0 && selected.size === rows.length}
+            onChange={toggleSelectAll}
+            aria-label="Select all"
+          />
+        ),
+        cell: (info) => (
+          <input
+            type="checkbox"
+            checked={selected.has(info.row.original.id)}
+            onChange={() => toggleSelected(info.row.original.id)}
+            aria-label={`Select ${info.row.original.name}`}
+          />
+        ),
+      }),
       columnHelper.accessor("name", {
         header: "Name",
         cell: (info) => (
@@ -136,19 +210,21 @@ export default function InquiryTable({
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="RESOLVED">Resolved</option>
               </select>
-              <button
-                disabled={busy}
-                onClick={() => handleDelete(row.id)}
-                className="rounded-lg border border-error/30 px-2.5 py-1.5 text-xs font-semibold text-error transition-colors hover:bg-error/10"
-              >
-                Delete
-              </button>
+              {canDelete && (
+                <button
+                  disabled={busy}
+                  onClick={() => handleDelete(row.id)}
+                  className="rounded-lg border border-error/30 px-2.5 py-1.5 text-xs font-semibold text-error transition-colors hover:bg-error/10"
+                >
+                  Delete
+                </button>
+              )}
             </div>
           );
         },
       }),
     ],
-    [busyId, handleStatusChange, handleDelete, onView]
+    [busyId, selected, rows, canDelete, toggleSelected, toggleSelectAll, handleStatusChange, handleDelete, onView]
   );
 
   const table = useReactTable({
@@ -161,6 +237,45 @@ export default function InquiryTable({
 
   return (
     <div className="overflow-hidden rounded-[16px] border border-card-border bg-surface">
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-3 border-b border-card-border bg-gold/10 px-4 py-3">
+          <span className="text-sm font-semibold text-gold-text">{selected.size} selected</span>
+          <select
+            disabled={bulkBusy}
+            defaultValue=""
+            onChange={(e) => {
+              const value = e.target.value as "NEW" | "IN_PROGRESS" | "RESOLVED";
+              if (value) handleBulkStatus(value);
+              e.target.value = "";
+            }}
+            className="rounded-lg border border-card-border bg-cream-input px-2.5 py-1.5 text-xs text-heading"
+          >
+            <option value="" disabled>
+              Set status…
+            </option>
+            <option value="NEW">New</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
+          </select>
+          {canDelete && (
+            <button
+              disabled={bulkBusy}
+              onClick={handleBulkDelete}
+              className="rounded-lg border border-error/30 px-2.5 py-1.5 text-xs font-semibold text-error transition-colors hover:bg-error/10"
+            >
+              Delete Selected
+            </button>
+          )}
+          <button
+            disabled={bulkBusy}
+            onClick={() => setSelected(new Set())}
+            className="text-xs font-semibold text-muted hover:text-heading"
+          >
+            Clear
+          </button>
+          {bulkFeedback && <span className="text-xs text-muted">{bulkFeedback}</span>}
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left">
           <thead>

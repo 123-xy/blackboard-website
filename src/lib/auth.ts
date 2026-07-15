@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -12,28 +13,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-
-        if (!adminEmail || !adminPasswordHash) {
-          console.error("[auth] ADMIN_EMAIL or ADMIN_PASSWORD_HASH not configured");
-          return null;
-        }
-
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
 
         if (!email || !password) return null;
 
-        if (email.toLowerCase() !== adminEmail.toLowerCase()) return null;
+        const adminUser = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase() } });
+        if (!adminUser) return null;
 
-        const isValid = await bcrypt.compare(password, adminPasswordHash);
+        const isValid = await bcrypt.compare(password, adminUser.passwordHash);
         if (!isValid) return null;
 
         return {
-          id: "admin",
-          email: adminEmail,
-          name: "Admin",
+          id: adminUser.id,
+          email: adminUser.email,
+          name: adminUser.name || adminUser.email,
+          role: adminUser.role,
         };
       },
     }),
@@ -49,12 +44,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+        session.user.role = token.role as "ADMIN" | "STAFF" | undefined;
       }
       return session;
     },

@@ -142,9 +142,9 @@ export default function HomeClient() {
       {/* Hero */}
       <section className="relative mx-auto grid max-w-[1400px] items-center gap-10 overflow-hidden px-5 pt-10 pb-6 sm:px-8 sm:pt-16 sm:pb-10 lg:px-14"
         style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
-        <Image src="/images/logo-badge.png" alt="" width={280} height={280} className="pointer-events-none absolute -top-[6%] left-[2%] z-0 w-[280px] opacity-[0.16] [animation:badgeFloat_8s_ease-in-out_infinite] [filter:drop-shadow(0_20px_24px_rgba(0,0,0,0.2))]" />
-        <Image src="/images/logo-badge.png" alt="" width={180} height={180} className="pointer-events-none absolute bottom-[2%] left-[36%] z-0 w-[180px] opacity-[0.12] [animation:badgeFloat2_9.5s_ease-in-out_infinite] [filter:drop-shadow(0_16px_18px_rgba(0,0,0,0.18))]" />
-        <Image src="/images/logo-badge.png" alt="" width={220} height={220} className="pointer-events-none absolute top-[22%] right-[-2%] z-0 w-[220px] opacity-[0.14] [animation:badgeFloat3_10.5s_ease-in-out_infinite] [filter:drop-shadow(0_18px_20px_rgba(0,0,0,0.18))]" />
+        <Image src="/images/logo-badge.png" alt="" width={280} height={280} className="pointer-events-none absolute -top-[6%] left-[2%] z-0 w-[280px] h-[280px] opacity-[0.16] [animation:badgeFloat_8s_ease-in-out_infinite] [filter:drop-shadow(0_20px_24px_rgba(0,0,0,0.2))]" />
+        <Image src="/images/logo-badge.png" alt="" width={180} height={180} className="pointer-events-none absolute bottom-[2%] left-[36%] z-0 w-[180px] h-[180px] opacity-[0.12] [animation:badgeFloat2_9.5s_ease-in-out_infinite] [filter:drop-shadow(0_16px_18px_rgba(0,0,0,0.18))]" />
+        <Image src="/images/logo-badge.png" alt="" width={220} height={220} className="pointer-events-none absolute top-[22%] right-[-2%] z-0 w-[220px] h-[220px] opacity-[0.14] [animation:badgeFloat3_10.5s_ease-in-out_infinite] [filter:drop-shadow(0_18px_20px_rgba(0,0,0,0.18))]" />
 
         <div className="relative z-10">
           <div className="mb-7 h-[5px] w-16 rounded-full bg-gold" />

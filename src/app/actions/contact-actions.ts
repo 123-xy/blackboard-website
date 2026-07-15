@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { updateInquirySchema } from "@/lib/validations";
+import { sendInquiryResolvedEmail } from "@/lib/services/contact-email";
+import { sendInquiryResolvedWhatsApp } from "@/lib/services/whatsapp";
 import type { Prisma } from "@prisma/client";
 
 // ---------- Admin: list inquiries ----------
@@ -66,6 +68,27 @@ export async function getInquiry(id: string) {
   return { ok: true as const, inquiry };
 }
 
+// Notify the customer their request is confirmed — best-effort, never throws.
+async function notifyInquiryResolved(inquiry: { name: string; email: string; phone: string | null; subject: string; message: string }) {
+  const [emailResult, whatsappResult] = await Promise.all([
+    sendInquiryResolvedEmail({
+      name: inquiry.name,
+      email: inquiry.email,
+      subject: inquiry.subject,
+      message: inquiry.message,
+    }),
+    inquiry.phone
+      ? sendInquiryResolvedWhatsApp({
+          phone: inquiry.phone,
+          name: inquiry.name,
+          subject: inquiry.subject,
+          message: inquiry.message,
+        })
+      : Promise.resolve({ ok: false as const, error: "No phone number on file" }),
+  ]);
+  return { email: emailResult.ok, whatsapp: whatsappResult.ok };
+}
+
 // ---------- Admin: update status ----------
 export async function updateInquiryStatus(id: string, status: "NEW" | "IN_PROGRESS" | "RESOLVED") {
   const session = await auth();
@@ -78,18 +101,67 @@ export async function updateInquiryStatus(id: string, status: "NEW" | "IN_PROGRE
     return { ok: false as const, error: "Invalid status" };
   }
 
+  let inquiry;
   try {
-    const inquiry = await prisma.inquiry.update({
+    inquiry = await prisma.inquiry.update({
       where: { id },
       data: { status: parsed.data.status },
     });
-    return { ok: true as const, inquiry };
   } catch (err) {
     return {
       ok: false as const,
       error: err instanceof Error ? err.message : "Failed to update inquiry",
     };
   }
+
+  const notified = parsed.data.status === "RESOLVED" ? await notifyInquiryResolved(inquiry) : null;
+
+  return { ok: true as const, inquiry, notified };
+}
+
+// ---------- Admin: bulk update status ----------
+export async function bulkUpdateInquiryStatusAction(ids: string[], status: "NEW" | "IN_PROGRESS" | "RESOLVED") {
+  const session = await auth();
+  if (!session) {
+    return { ok: false as const, error: "Unauthorized" };
+  }
+
+  if (ids.length === 0) {
+    return { ok: false as const, error: "No inquiries selected" };
+  }
+
+  await prisma.inquiry.updateMany({
+    where: { id: { in: ids } },
+    data: { status },
+  });
+
+  if (status !== "RESOLVED") {
+    return { ok: true as const, notifiedCount: 0, failedCount: 0 };
+  }
+
+  const inquiries = await prisma.inquiry.findMany({ where: { id: { in: ids } } });
+  const results = await Promise.all(inquiries.map((i) => notifyInquiryResolved(i)));
+  const notifiedCount = results.filter((r) => r.email || r.whatsapp).length;
+
+  return { ok: true as const, notifiedCount, failedCount: results.length - notifiedCount };
+}
+
+// ---------- Admin: bulk delete ----------
+export async function bulkDeleteInquiriesAction(ids: string[]) {
+  const session = await auth();
+  if (!session) {
+    return { ok: false as const, error: "Unauthorized" };
+  }
+  if (session.user?.role !== "ADMIN") {
+    return { ok: false as const, error: "Only admins can delete inquiries" };
+  }
+
+  if (ids.length === 0) {
+    return { ok: false as const, error: "No inquiries selected" };
+  }
+
+  const result = await prisma.inquiry.deleteMany({ where: { id: { in: ids } } });
+  return { ok: true as const, deletedCount: result.count };
 }
 
 // ---------- Admin: delete inquiry ----------
@@ -97,6 +169,9 @@ export async function deleteInquiry(id: string) {
   const session = await auth();
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
+  }
+  if (session.user?.role !== "ADMIN") {
+    return { ok: false as const, error: "Only admins can delete inquiries" };
   }
 
   try {

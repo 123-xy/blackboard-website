@@ -34,8 +34,8 @@ export default function ServicesPage() {
       <Header active="services" />
 
       <section className="relative overflow-hidden bg-dark px-5 py-10 text-center sm:px-8 sm:py-16 lg:px-14 lg:py-18">
-        <Image src="/images/logo-badge.png" alt="" width={130} height={130} className="pointer-events-none absolute top-[12%] left-[6%] z-0 w-[130px] opacity-10 [animation:badgeFloatSm_9s_ease-in-out_infinite]" />
-        <Image src="/images/logo-badge.png" alt="" width={150} height={150} className="pointer-events-none absolute bottom-[14%] right-[7%] z-0 w-[150px] opacity-[0.12] [animation:badgeFloatSm2_11s_ease-in-out_infinite]" />
+        <Image src="/images/logo-badge.png" alt="" width={130} height={130} className="pointer-events-none absolute top-[12%] left-[6%] z-0 w-[130px] h-[130px] opacity-10 [animation:badgeFloatSm_9s_ease-in-out_infinite]" />
+        <Image src="/images/logo-badge.png" alt="" width={150} height={150} className="pointer-events-none absolute bottom-[14%] right-[7%] z-0 w-[150px] h-[150px] opacity-[0.12] [animation:badgeFloatSm2_11s_ease-in-out_infinite]" />
         <CoffeeCupSteam className="absolute top-[10%] right-[20%] z-0 opacity-50" />
 
         <div className="relative z-10">

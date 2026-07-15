@@ -35,7 +35,7 @@ export default async function AdminPage() {
         </form>
       </header>
 
-      <AdminDashboardClient />
+      <AdminDashboardClient role={session.user?.role} userId={session.user?.id} />
     </div>
   );
 }

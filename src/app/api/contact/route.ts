@@ -15,19 +15,25 @@ function getClientIp(request: Request): string {
   return request.headers.get("x-real-ip") || "unknown";
 }
 
-// The existing Contact page form collects cateringType + guestCount instead
-// of a generic "subject" — this maps those fields onto the Inquiry model
+// The existing Contact page form collects cateringType + guestCount + eventDate
+// instead of a generic "subject" — this maps those fields onto the Inquiry model
 // without changing the form's UI: cateringType becomes the subject line, and
-// guestCount is folded into the stored message so nothing is lost.
+// guestCount/eventDate are folded into the stored message so nothing is lost.
 function toInquiryPayload(body: Record<string, unknown>) {
   const cateringType = typeof body.cateringType === "string" ? body.cateringType : undefined;
   const guestCount = typeof body.guestCount === "string" ? body.guestCount : undefined;
+  const eventDate = typeof body.eventDate === "string" ? body.eventDate : undefined;
   const message = typeof body.message === "string" ? body.message : "";
+
+  const details = [
+    eventDate ? `Event date: ${eventDate}` : null,
+    guestCount ? `Estimated guest count: ${guestCount}` : null,
+  ].filter(Boolean);
 
   return {
     ...body,
     subject: typeof body.subject === "string" && body.subject ? body.subject : cateringType || "General Enquiry",
-    message: guestCount ? `Estimated guest count: ${guestCount}\n\n${message}` : message,
+    message: details.length ? `${details.join("\n")}\n\n${message}` : message,
   };
 }
 
