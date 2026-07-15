@@ -138,6 +138,14 @@ export default function InquiryDetail({
           >
             Reply via Email App
           </a>
+          <a
+            href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inquiry.email)}&su=${encodeURIComponent("Re: " + inquiry.subject)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 rounded-lg border border-card-border px-6 py-3 text-center text-sm font-semibold text-heading transition-colors hover:border-gold hover:text-gold no-underline"
+          >
+            Reply via Gmail
+          </a>
           {inquiry.status !== "RESOLVED" && !resolveFeedback && (
             <button
               disabled={busy}
