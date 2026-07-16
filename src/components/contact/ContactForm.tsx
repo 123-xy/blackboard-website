@@ -191,7 +191,7 @@ export default function ContactForm() {
 
           {status === "error" && (
             <div className="mb-5 text-[13px] text-error">
-              {errorMessage || "Something went wrong sending your message — please try again, or email Venuacha@whiteboard.com directly."}
+              {errorMessage || "Something went wrong sending your message — please try again, or email Venugopalacha@whiteboard.cafe directly."}
             </div>
           )}
 
