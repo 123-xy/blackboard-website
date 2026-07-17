@@ -59,7 +59,7 @@ async function sendViaResend(params: { to: string; replyTo?: string; subject: st
 
 // ---------- Owner notification ----------
 export async function sendOwnerNotification(data: InquiryEmailData) {
-  const ownerEmail = process.env.CONTACT_OWNER_EMAIL || process.env.CONTACT_TO_EMAIL || "Venugopalacha@whiteboard.cafe";
+  const ownerEmail = process.env.CONTACT_OWNER_EMAIL || process.env.CONTACT_TO_EMAIL || "Venuacha@whiteboard.cafe";
   const dashboardUrl = `${process.env.NEXTAUTH_URL || "https://blackboardrestaurant.com"}/admin`;
   const submittedAt = data.createdAt.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 

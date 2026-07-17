@@ -31,8 +31,8 @@ const CONTACT_DETAILS = [
   },
   {
     label: "EMAIL",
-    value: "Venugopalacha@whiteboard.cafe",
-    href: "mailto:Venugopalacha@whiteboard.cafe",
+    value: "Venuacha@whiteboard.cafe",
+    href: "mailto:Venuacha@whiteboard.cafe",
     note: "For corporate, institutional & event catering enquiries",
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

@@ -26,7 +26,7 @@ const FAQS = [
   {
     question: "How do I reach you for a catering enquiry?",
     answer:
-      "Call +91 99496-70225, email Venugopalacha@whiteboard.cafe, or use the contact form or WhatsApp button on this page.",
+      "Call +91 99496-70225, email Venuacha@whiteboard.cafe, or use the contact form or WhatsApp button on this page.",
   },
 ];
 

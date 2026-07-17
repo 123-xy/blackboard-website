@@ -59,8 +59,8 @@ export default function Footer() {
             <a href="tel:9949670225" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
               +91 99496-70225
             </a>
-            <a href="mailto:Venugopalacha@whiteboard.cafe" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
-              Venugopalacha@whiteboard.cafe
+            <a href="mailto:Venuacha@whiteboard.cafe" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
+              Venuacha@whiteboard.cafe
             </a>
           </div>
           <div className="mt-5 flex gap-3">
