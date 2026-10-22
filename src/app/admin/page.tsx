@@ -1,41 +1,18 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/lib/auth";
+import CafeDashboard from "@/components/dashboard/CafeDashboard";
+import { loadDashboardData } from "./dashboard-actions";
 import { logoutAction } from "./actions";
-import AdminDashboardClient from "./AdminDashboardClient";
 
-export const metadata = {
-  title: "Admin Dashboard | Blackboard Cafe",
-};
+export const metadata = {title:"Admin Dashboard | Blackboard Cafe",robots:{index:false,follow:false}};
 
-export default async function AdminPage() {
-  const session = await auth();
-  if (!session) redirect("/admin/login");
-
-  return (
-    <div className="min-h-screen bg-cream font-body">
-      <header className="flex items-center justify-between gap-4 border-b border-card-border bg-surface px-5 py-4 sm:px-8">
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-center rounded-[10px] bg-dark px-3.5 pt-1.5 pb-1">
-            <div className="font-display text-sm leading-none font-extrabold tracking-[0.5px] text-gold">
-              BLACKBOARD
-            </div>
-            <div className="mt-0.5 font-display text-[10px] leading-none font-bold tracking-[1.5px] text-white">
-              CAFE
-            </div>
-          </div>
-          <span className="hidden font-display text-base font-bold text-heading sm:inline">Admin Dashboard</span>
-        </div>
-        <form action={logoutAction}>
-          <button
-            type="submit"
-            className="rounded-lg border border-card-border px-4 py-2.5 text-sm font-semibold text-muted transition-colors hover:border-gold hover:text-gold"
-          >
-            Sign out
-          </button>
-        </form>
-      </header>
-
-      <AdminDashboardClient role={session.user?.role} userId={session.user?.id} />
-    </div>
-  );
+export default async function AdminPage(){
+  const session=await auth();
+  if(!session)redirect("/admin/login");
+  const initialData=await loadDashboardData().catch(()=>null);
+  if(!initialData){
+    return <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-5 px-6"><h1 className="text-3xl font-bold">Dashboard temporarily unavailable</h1><p>Your session may have expired or the database may be unavailable. Your saved records are unchanged.</p><Link href="/admin" className="text-gold">Try again</Link><form action={logoutAction}><button type="submit" className="rounded-lg border border-gold px-5 py-3 text-gold">Sign in again</button></form></main>;
+  }
+  return <CafeDashboard initialData={initialData}/>;
 }

@@ -24,6 +24,10 @@ model Reservation {
   notes            String?
   status           ReservationStatus @default(PENDING)
   confirmationCode String            @unique
+  service          String            @default("Cafe dining")
+  venue            String            @default("Blackboard Cafe")
+  staffNotes       String?
+  inquiryId        String?           @unique
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -60,6 +64,11 @@ model Inquiry {
   userAgent   String?
   spamScore   Int           @default(0)
   isSpam      Boolean       @default(false)
+  dashboardStatus String?
+  staffNotes      String?
+  followUpDate    DateTime? @db.Date
+  eventDate       DateTime? @db.Date
+  guestCount      Int?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
