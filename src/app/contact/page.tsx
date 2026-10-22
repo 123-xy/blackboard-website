@@ -16,8 +16,8 @@ export const metadata: Metadata = {
 const CONTACT_DETAILS = [
   {
     label: "PHONE",
-    value: "+91 79819-16653",
-    href: "tel:7981916653",
+    value: "+91 99496-70225",
+    href: "tel:9949670225",
     note: null,
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="relative bg-dark px-5 pt-8 pb-8 font-body text-on-dark-2 sm:px-8 sm:pt-14 lg:px-14">
       <a
-        href="https://wa.me/917981916653?text=Hi%20Blackboard%20Cafe%2C%20I%27d%20like%20to%20know%20more!"
+        href="https://wa.me/919949670225?text=Hi%20Blackboard%20Cafe%2C%20I%27d%20like%20to%20know%20more!"
         target="_blank"
         rel="noopener"
         aria-label="Chat on WhatsApp"
@@ -56,8 +56,8 @@ export default function Footer() {
           <div className="mb-4.5 font-display text-base font-bold text-gold">GET IN TOUCH</div>
           <div className="flex flex-col gap-3 text-sm text-muted-on-dark">
             <div>Hyderabad, Telangana, India</div>
-            <a href="tel:7981916653" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
-              +91 79819-16653
+            <a href="tel:9949670225" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
+              +91 99496-70225
             </a>
             <a href="mailto:Venuacha@whiteboard.cafe" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
               Venuacha@whiteboard.cafe
