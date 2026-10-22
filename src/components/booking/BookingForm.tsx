@@ -261,7 +261,7 @@ export default function BookingForm({ onSuccess }: BookingFormProps) {
               <input
                 {...register("phone")}
                 type="tel"
-                placeholder="+91 99496-70225"
+                placeholder="+91 79819-16653"
                 className={fieldClasses}
               />
               {errors.phone && (
