@@ -17,4 +17,5 @@ async function request(path,options={}){
   const page=await request('/admin');const html=await page.text();
   if(page.status!==200 || !html.includes('Blackboard Cafe · Admin dashboard') || html.includes('Dashboard temporarily unavailable'))throw new Error('Live dashboard failed to render');
   console.log(JSON.stringify({login:true,role:session.user.role,dashboardStatus:page.status,liveData:true}));
+  if(process.env.DASHBOARD_VERIFY_WRITES==='1')await require('./verify-dashboard-writes.cjs')({request,base,html});
 })().catch(error=>{console.error('Admin verification failed: '+error.message);process.exitCode=1;});
