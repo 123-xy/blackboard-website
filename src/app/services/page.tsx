@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import CoffeeCupSteam from "@/components/CoffeeCupSteam";
 import ClickableImage from "@/components/ClickableImage";
+import {getWebsiteSettings} from "@/lib/dashboard-store";
 
 export const metadata: Metadata = {
   title: "Services | Blackboard Cafe",
@@ -28,7 +29,9 @@ const SERVICES = [
   { icon: "🍹", title: "Customized Catering Solutions", desc: "Tailored multi-cuisine menus built around each client’s scale and occasion, backed by an experienced leadership team.", tag: "Tailored to Scale", placeholder: "Drop a catering solutions photo", img: "/images/customized-catering.jpg" },
 ];
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const settings=await getWebsiteSettings();
+  const services=SERVICES.map((service,index)=>{const mapping:Record<number,number>={0:0,2:1,3:2,4:3};const saved=settings.services[mapping[index]];return saved?{...service,title:saved.title,desc:saved.description}:service;});
   return (
     <div className="min-h-screen bg-cream font-body">
       <Header active="services" />
@@ -60,7 +63,7 @@ export default function ServicesPage() {
 
       <section className="mx-auto max-w-[1300px] px-5 py-9 sm:px-8 sm:py-18 lg:px-14 lg:py-20">
         <div className="grid gap-7" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
-          {SERVICES.map((s) => (
+          {services.map((s) => (
             <div key={s.title} className="overflow-hidden rounded-[18px] border border-card-border bg-surface">
               <div className="relative h-40 w-full">
                 {s.img ? (

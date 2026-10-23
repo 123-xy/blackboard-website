@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import CoffeeCupSteam from "@/components/CoffeeCupSteam";
 import ClickableImage from "@/components/ClickableImage";
+import {getGalleryPhotos} from "@/lib/dashboard-store";
 
 export const metadata: Metadata = {
   title: "Gallery | Blackboard Cafe",
@@ -14,18 +15,9 @@ export const metadata: Metadata = {
 
 const CATEGORIES = ["Café Dining", "Institutional Catering", "Corporate Catering", "Event & Exhibition Catering"];
 
-const TILES = [
-  { label: "Drop a café interior photo", caption: "Café Interior", img: "/images/cafe-interior.jpg" },
-  { label: "Drop an outdoor seating photo", caption: "Outdoor Seating", img: "/images/outdoor-seating.jpg" },
-  { label: "Drop a signature dishes photo", caption: "Signature Dishes", img: "/images/signature-dishes.jpg" },
-  { label: "Drop an event catering photo", caption: "Event Catering", img: "/images/event-catering.jpg" },
-  { label: "Drop a fresh bakes photo", caption: "Fresh Bakes", img: "/images/fresh-bakes.jpg" },
-  { label: "Drop a corporate setup photo", caption: "Corporate Setup", img: "/images/corporate-setup.jpg" },
-  { label: "Drop a celebrations photo", caption: "Celebrations", img: "/images/celebrations.jpg" },
-  { label: "Drop a behind-the-scenes photo", caption: "Behind the Scenes", img: "/images/behind-the-scenes.jpg" },
-];
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const photos=(await getGalleryPhotos()).filter(p=>p.published&&!p.trashed);
   return (
     <div className="min-h-screen bg-cream font-body">
       <Header active="gallery" />
@@ -42,7 +34,7 @@ export default function GalleryPage() {
             A LOOK INSIDE
           </h1>
           <p className="mx-auto mb-7 max-w-[560px] text-base text-muted-on-dark">
-            Moments from our café, kitchen, corporate accounts, and events. Photos coming soon — placeholders shown below.
+            Moments from our café, kitchen, corporate accounts, and events.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             {CATEGORIES.map((c) => (
@@ -56,7 +48,7 @@ export default function GalleryPage() {
 
       <section className="mx-auto max-w-[1300px] px-5 py-9 sm:px-8 sm:py-18 lg:px-14 lg:py-20">
         <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-          {TILES.map((t) => (
+          {photos.map((photo)=>({caption:photo.title,label:photo.alt,img:photo.src})).map((t) => (
             <div key={t.caption}>
               <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "4/3" }}>
                 {t.img ? (

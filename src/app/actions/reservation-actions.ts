@@ -2,7 +2,7 @@
 
 import { createReservation, cancelReservationByCode, getReservationByCode, autoCompletePastReservations } from "@/lib/booking";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { reservationSchema, confirmationCodeSchema } from "@/lib/validations";
 import { sendReservationEmail, sendReservationConfirmedNoticeEmail } from "@/lib/services/email";
 import { sendReservationConfirmedNoticeWhatsApp } from "@/lib/services/whatsapp";
@@ -16,7 +16,7 @@ export async function getAllReservationsAction(options: {
   search?: string;
   date?: string;
 } = {}) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -167,7 +167,7 @@ async function notifyReservationConfirmed(reservation: {
 
 // ---------- Admin: update status ----------
 export async function updateReservationStatusAction(id: string, status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED") {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -195,7 +195,7 @@ export async function bulkUpdateReservationStatusAction(
   ids: string[],
   status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED"
 ) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -222,7 +222,7 @@ export async function bulkUpdateReservationStatusAction(
 
 // ---------- Admin: bulk delete ----------
 export async function bulkDeleteReservationsAction(ids: string[]) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -240,7 +240,7 @@ export async function bulkDeleteReservationsAction(ids: string[]) {
 
 // ---------- Admin: resend confirmation email ----------
 export async function resendReservationConfirmationAction(id: string) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -268,7 +268,7 @@ export async function resendReservationConfirmationAction(id: string) {
 
 // ---------- Admin: delete reservation ----------
 export async function deleteReservationAction(id: string) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -289,7 +289,7 @@ export async function deleteReservationAction(id: string) {
 
 // ---------- Admin: get dashboard stats ----------
 export async function getDashboardStatsAction() {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -332,7 +332,7 @@ export async function getDashboardStatsAction() {
 
 // ---------- Admin: reservation counts per day for a calendar month ----------
 export async function getMonthReservationCountsAction(year: number, month: number) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }

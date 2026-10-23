@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { getAvailableSlots, getSettings } from "@/lib/booking";
 import {
   startOfDay,
@@ -55,7 +55,7 @@ export async function getDashboardOverviewAction(
   range: DashboardRange = "30d",
   customRange?: { from: string; to: string }
 ) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -296,7 +296,7 @@ export async function getDashboardOverviewAction(
 
 // ---------- Reservation operations: today / upcoming / cancelled / table occupancy ----------
 export async function getReservationOpsAction() {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -373,7 +373,7 @@ export async function getReservationOpsAction() {
 
 // ---------- Customer insights: top/loyal customers, repeat rate, visit frequency, churn risk ----------
 export async function getCustomerInsightsAction() {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -446,7 +446,7 @@ export async function getCustomerInsightsAction() {
 
 // ---------- Lightweight recent activity feed (for the header notification bell) ----------
 export async function getRecentActivityAction() {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -511,7 +511,7 @@ export async function getRecentActivityAction() {
 
 // ---------- Global search across reservations and inquiries ----------
 export async function globalSearchAction(query: string) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }

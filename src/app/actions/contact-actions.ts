@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { updateInquirySchema } from "@/lib/validations";
 import { sendInquiryResolvedEmail } from "@/lib/services/contact-email";
 import { sendInquiryResolvedWhatsApp } from "@/lib/services/whatsapp";
@@ -14,7 +14,7 @@ export async function getAllInquiries(options: {
   status?: "NEW" | "IN_PROGRESS" | "RESOLVED";
   search?: string;
 } = {}) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -55,7 +55,7 @@ export async function getAllInquiries(options: {
 
 // ---------- Admin: get single inquiry ----------
 export async function getInquiry(id: string) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -91,7 +91,7 @@ async function notifyInquiryResolved(inquiry: { name: string; email: string; pho
 
 // ---------- Admin: update status ----------
 export async function updateInquiryStatus(id: string, status: "NEW" | "IN_PROGRESS" | "RESOLVED") {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -121,7 +121,7 @@ export async function updateInquiryStatus(id: string, status: "NEW" | "IN_PROGRE
 
 // ---------- Admin: bulk update status ----------
 export async function bulkUpdateInquiryStatusAction(ids: string[], status: "NEW" | "IN_PROGRESS" | "RESOLVED") {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -148,7 +148,7 @@ export async function bulkUpdateInquiryStatusAction(ids: string[], status: "NEW"
 
 // ---------- Admin: bulk delete ----------
 export async function bulkDeleteInquiriesAction(ids: string[]) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -166,7 +166,7 @@ export async function bulkDeleteInquiriesAction(ids: string[]) {
 
 // ---------- Admin: delete inquiry ----------
 export async function deleteInquiry(id: string) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -187,7 +187,7 @@ export async function deleteInquiry(id: string) {
 
 // ---------- Admin: inquiry stats ----------
 export async function getInquiryStatsAction() {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }

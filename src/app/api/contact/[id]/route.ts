@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { updateInquirySchema } from "@/lib/validations";
 
 export const runtime = "nodejs";
 
 // GET /api/contact/:id — Fetch a single inquiry (admin only)
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -24,7 +24,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 // PATCH /api/contact/:id — Update inquiry status (admin only)
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -61,7 +61,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 // DELETE /api/contact/:id — Delete an inquiry (admin only)
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

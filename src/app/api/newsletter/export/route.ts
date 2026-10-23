@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { toCsv } from "@/lib/csv";
 
 export const runtime = "nodejs";
 
 // GET /api/newsletter/export — CSV export of newsletter subscribers (admin only)
 export async function GET() {
-  const session = await auth();
+  const access = await getAccess("settings"); const session = access ? {user:access} : null;
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -6,6 +6,7 @@ import CoffeeCupSteam from "@/components/CoffeeCupSteam";
 import ContactForm from "@/components/contact/ContactForm";
 import ContactMap from "@/components/contact/ContactMap";
 import FaqAccordion from "@/components/contact/FaqAccordion";
+import {getWebsiteSettings} from "@/lib/dashboard-store";
 
 export const metadata: Metadata = {
   title: "Contact | Blackboard Cafe",
@@ -55,7 +56,9 @@ const CONTACT_DETAILS = [
   },
 ];
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings=await getWebsiteSettings();
+  const details=CONTACT_DETAILS.map(d=>d.label==="PHONE"?{...d,value:settings.phone,href:`tel:${settings.phone.replace(/[^+\d]/g,"")}`}:d.label==="EMAIL"?{...d,value:settings.email,href:`mailto:${settings.email}`}:{...d,value:settings.address,href:settings.maps||null});
   return (
     <div className="min-h-screen bg-cream font-body">
       <Header active="contact" />
@@ -95,7 +98,7 @@ export default function ContactPage() {
       >
         <div>
           <div className="mb-9 flex flex-col gap-6">
-            {CONTACT_DETAILS.map((d) => (
+            {details.map((d) => (
               <div key={d.label} className="flex items-start gap-4">
                 <div className="flex h-12 w-12 flex-none items-center justify-center rounded-full border-2 border-gold [animation:iconPulse_2.6s_ease-in-out_infinite]">
                   {d.icon}

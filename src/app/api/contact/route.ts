@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { createInquiry } from "@/lib/inquiry";
 import { inquirySchema } from "@/lib/validations";
 import { verifyRecaptcha } from "@/lib/recaptcha";
@@ -83,6 +83,10 @@ export async function POST(request: Request) {
       ipAddress: ip,
       userAgent: request.headers.get("user-agent"),
     });
+    const details=rawBody as Record<string,unknown>;
+    const guests=Number(details.guestCount);
+    const event=typeof details.eventDate==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(details.eventDate)?new Date(details.eventDate+"T00:00:00Z"):null;
+    await prisma.inquiry.update({where:{id:inquiry.id},data:{guestCount:Number.isInteger(guests)&&guests>0&&guests<=10000?guests:null,eventDate:event&&!Number.isNaN(event.getTime())?event:null}});
 
     return NextResponse.json({ ok: true, id: inquiry.id }, { status: 201 });
   } catch (err) {
@@ -93,7 +97,7 @@ export async function POST(request: Request) {
 
 // GET /api/contact — List inquiries (admin only)
 export async function GET(request: Request) {
-  const session = await auth();
+  const access = await getAccess("enquiries"); const session = access ? {user:access} : null;
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

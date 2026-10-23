@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ImagePlaceholder from "@/components/ImagePlaceholder";
 import ClickableImage from "@/components/ClickableImage";
+import {useWebsiteSettings} from "@/components/WebsiteSettingsProvider";
 
 const FEATURES = [
   { icon: "🍴", title: "DELICIOUS FOOD", desc: "Fresh and tasty dishes made with love." },
@@ -78,6 +79,7 @@ const REVIEWS = [
 const SLIDE_INTERVAL = 4500;
 
 export default function HomeClient() {
+  const website=useWebsiteSettings();
   const [activeSlide, setActiveSlide] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const storeRef = useRef<HTMLDivElement>(null);
@@ -160,12 +162,10 @@ export default function HomeClient() {
               backgroundClip: "text",
             }}
           >
-            GREAT FOOD,
-            <br />
-            GREAT LIFE
+            {website.heading}
           </h1>
           <p className="m-0 max-w-[440px] text-lg leading-[1.7] text-muted">
-            Welcome to Blackboard Cafe, where delicious food meets a warm and friendly atmosphere.
+            {website.description}
           </p>
         </div>
 
@@ -318,7 +318,7 @@ export default function HomeClient() {
           From cozy café mornings to large corporate events, here&apos;s a quick look at how Blackboard Cafe serves.
         </p>
         <div className="grid gap-6 pb-12 sm:pb-16 lg:pb-22" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-          {HIGHLIGHTS.map((h) => (
+          {HIGHLIGHTS.map((h,i)=>({...h,title:website.services[i]?.title??h.title,desc:website.services[i]?.description??h.desc})).map((h) => (
             <div key={h.title} className="overflow-hidden rounded-2xl border border-card-border bg-surface text-left">
               <div className="relative h-[140px] w-full">
                 {h.img ? (

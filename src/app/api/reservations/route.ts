@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { createReservation, autoCompletePastReservations } from "@/lib/booking";
 import { reservationSchema } from "@/lib/validations";
 import type { Prisma } from "@prisma/client";
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
 // GET /api/reservations — List reservations (admin only)
 export async function GET(request: Request) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

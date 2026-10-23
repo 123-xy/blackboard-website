@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { toCsv } from "@/lib/csv";
 import { formatDateShort, formatTime } from "@/lib/utils";
 import type { Prisma } from "@prisma/client";
@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 // GET /api/reservations/export — CSV export of reservations (admin only)
 export async function GET(request: Request) {
-  const session = await auth();
+  const access = await getAccess("bookings"); const session = access ? {user:access} : null;
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

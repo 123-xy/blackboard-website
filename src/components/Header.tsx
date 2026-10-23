@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {useWebsiteSettings} from "./WebsiteSettingsProvider";
 import { useEffect, useState } from "react";
 
 export type ActivePage = "home" | "about" | "services" | "gallery" | "contact";
@@ -22,6 +23,7 @@ const NAV_ITEMS: { key: ActivePage; label: string }[] = [
 ];
 
 export default function Header({ active }: { active: ActivePage }) {
+  const settings=useWebsiteSettings();
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -44,13 +46,13 @@ export default function Header({ active }: { active: ActivePage }) {
           className="flex flex-none flex-col items-center gap-0 rounded-[14px] bg-dark px-5 pt-2.5 pb-2 no-underline shadow-[0_6px_0_rgba(0,0,0,0.15)]"
         >
           <div className="font-display text-[22px] leading-none font-extrabold tracking-[0.5px] text-gold">
-            BLACKBOARD
+            {settings.businessName.replace(/\s*caf[eé]\s*$/i,"").toUpperCase()}
           </div>
           <div className="mt-0.5 font-display text-base leading-none font-bold tracking-[2px] text-white">
             CAFE
           </div>
           <div className="mt-1 rounded-lg bg-gold px-2 py-0.5 text-[8px] font-bold tracking-[1px] text-dark">
-            GREAT FOOD, GREAT LIFE
+            {settings.tagline.toUpperCase()}
           </div>
         </Link>
 

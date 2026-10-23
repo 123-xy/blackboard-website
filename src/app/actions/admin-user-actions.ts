@@ -2,11 +2,11 @@
 
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { createAdminUserSchema } from "@/lib/validations";
 
 async function requireAdmin() {
-  const session = await auth();
+  const access = await getAccess("staff"); const session = access ? {user:access} : null;
   if (!session || session.user?.role !== "ADMIN") {
     return null;
   }

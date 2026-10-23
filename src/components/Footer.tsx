@@ -1,11 +1,16 @@
+"use client";
 import Link from "next/link";
+import {useWebsiteSettings} from "./WebsiteSettingsProvider";
 import NewsletterSignupForm from "./NewsletterSignupForm";
 
 export default function Footer() {
+  const settings=useWebsiteSettings();
+  const digits=settings.phone.replace(/\D/g,"");
+  const international=digits.length===10?"91"+digits:digits;
   return (
     <footer className="relative bg-dark px-5 pt-8 pb-8 font-body text-on-dark-2 sm:px-8 sm:pt-14 lg:px-14">
       <a
-        href="https://wa.me/919949670225?text=Hi%20Blackboard%20Cafe%2C%20I%27d%20like%20to%20know%20more!"
+        href={`https://wa.me/${international}?text=Hi%20Blackboard%20Cafe%2C%20I%27d%20like%20to%20know%20more!`}
         target="_blank"
         rel="noopener"
         aria-label="Chat on WhatsApp"
@@ -20,7 +25,7 @@ export default function Footer() {
         <div>
           <div className="mb-4 inline-flex flex-col items-center rounded-[14px] bg-dark-2 px-5 pt-2.5 pb-2">
             <div className="font-display text-xl leading-none font-extrabold tracking-[0.5px] text-gold">
-              BLACKBOARD
+              {settings.businessName.replace(/\s*caf[eé]\s*$/i,"").toUpperCase()}
             </div>
             <div className="mt-0.5 font-display text-sm leading-none font-bold tracking-[2px] text-white">
               CAFE
@@ -55,12 +60,12 @@ export default function Footer() {
         <div>
           <div className="mb-4.5 font-display text-base font-bold text-gold">GET IN TOUCH</div>
           <div className="flex flex-col gap-3 text-sm text-muted-on-dark">
-            <div>Hyderabad, Telangana, India</div>
-            <a href="tel:9949670225" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
-              +91 99496-70225
+            <div>{settings.address}</div>
+            <a href={`tel:+${international}`} className="text-muted-on-dark no-underline transition-colors hover:text-gold">
+              {settings.phone}
             </a>
-            <a href="mailto:Venuacha@whiteboard.cafe" className="text-muted-on-dark no-underline transition-colors hover:text-gold">
-              Venuacha@whiteboard.cafe
+            <a href={`mailto:${settings.email}`} className="text-muted-on-dark no-underline transition-colors hover:text-gold">
+              {settings.email}
             </a>
           </div>
           <div className="mt-5 flex gap-3">
@@ -74,7 +79,7 @@ export default function Footer() {
               </svg>
             </a>
             <a
-              href="https://www.instagram.com/blackboardrestaurat?igsh=MTc3Mnl6MDRoNzBs"
+              href={settings.instagram||"https://www.instagram.com/blackboardrestaurat"}
               target="_blank"
               rel="noopener"
               aria-label="Instagram"
@@ -111,7 +116,7 @@ export default function Footer() {
         <span className="text-[13px] text-muted-on-dark-2">
           © 2026 Blackboard Cafe · Bevgo Ventures Pvt. Ltd. All rights reserved.
         </span>
-        <span className="text-[13px] text-muted-on-dark-2">Great Food, Great Life</span>
+        <span className="text-[13px] text-muted-on-dark-2">{settings.tagline}</span>
       </div>
     </footer>
   );

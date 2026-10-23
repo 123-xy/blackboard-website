@@ -1,13 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { getSettings } from "@/lib/booking";
 import { restaurantSettingsSchema } from "@/lib/validations";
 
 // ---------- Admin: get restaurant settings ----------
 export async function getSettingsAction() {
-  const session = await auth();
+  const access = await getAccess("settings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -24,7 +24,7 @@ export async function updateSettingsAction(input: {
   slotDuration: number;
   maxGuestsPerBooking: number;
 }) {
-  const session = await auth();
+  const access = await getAccess("settings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }

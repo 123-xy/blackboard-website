@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getAccess } from "@/lib/dashboard-store";
 import { newsletterSchema } from "@/lib/validations";
 
 // ---------- Public: subscribe ----------
@@ -28,7 +28,7 @@ export async function subscribeToNewsletterAction(email: string) {
 
 // ---------- Admin: list subscribers ----------
 export async function getNewsletterSubscribersAction(options: { page?: number; limit?: number } = {}) {
-  const session = await auth();
+  const access = await getAccess("settings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }
@@ -54,7 +54,7 @@ export async function getNewsletterSubscribersAction(options: { page?: number; l
 
 // ---------- Admin: delete subscriber ----------
 export async function deleteNewsletterSubscriberAction(id: string) {
-  const session = await auth();
+  const access = await getAccess("settings"); const session = access ? {user:access} : null;
   if (!session) {
     return { ok: false as const, error: "Unauthorized" };
   }

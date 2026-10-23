@@ -20,6 +20,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const adminUser = await prisma.adminUser.findUnique({ where: { email: email.toLowerCase() } });
         if (!adminUser) return null;
+        const access = await prisma.$queryRaw<{data:{active?:boolean}}[]>`SELECT data FROM "DashboardDocument" WHERE id=${`access:${adminUser.id}`}`;
+        if(access[0]?.data.active===false)return null;
 
         const isValid = await bcrypt.compare(password, adminUser.passwordHash);
         if (!isValid) return null;

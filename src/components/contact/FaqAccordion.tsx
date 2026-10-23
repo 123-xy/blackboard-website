@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import {useWebsiteSettings} from "@/components/WebsiteSettingsProvider";
 
 const FAQS = [
   {
@@ -31,11 +32,12 @@ const FAQS = [
 ];
 
 export default function FaqAccordion() {
+  const website=useWebsiteSettings();
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
     <div className="flex flex-col gap-3">
-      {FAQS.map((f, i) => {
+      {(website.faqs||FAQS).map((f, i) => {
         const open = openIndex === i;
         return (
           <div key={f.question} className="overflow-hidden rounded-[14px] bg-surface">
